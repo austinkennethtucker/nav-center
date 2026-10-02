@@ -123,8 +123,11 @@ final class DashboardStore: ObservableObject {
         return codexDrafts[packageName] ?? ""
     }
 
+    private var codexDraftRevisions: [String: UUID] = [:]
+
     func saveCodexDraft(_ draft: String, for packageName: String?) {
         guard let packageName else { return }
+        if codexDraft(for: packageName) != draft { codexDraftRevisions[packageName] = UUID() }
         if draft.isEmpty {
             codexDrafts.removeValue(forKey: packageName)
         } else if codexDrafts[packageName] != draft {
@@ -582,6 +585,7 @@ final class DashboardStore: ObservableObject {
     func sendCodexMessage(_ message: String, allowEdits: Bool, confirmed: Bool, packageName: String? = nil) async -> CodexSendOutcome {
         guard let name = packageName ?? selectedPackage?.package.name else { return .rejected(DashboardAPIError.missingPackageName.localizedDescription) }
         guard !isCodexLoading else { return .busy }
+        let draftRevision = codexDraftRevisions[name]
         let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .rejected("Message is empty.") }
         guard !allowEdits || confirmed else {
@@ -600,6 +604,9 @@ final class DashboardStore: ObservableObject {
         let request = CodexChatRequest(packageName: name, message: trimmed, threadId: conversation.threadId, allowEdits: allowEdits, confirmed: confirmed)
         do {
             let response = try await background(codex: true) { try $0.sendCodexChat(request) }
+            if response.ok, codexDraftRevisions[name] == draftRevision, codexDraft(for: name) == message {
+                saveCodexDraft("", for: name)
+            }
             conversation.threadId = response.threadId
             conversation.messages.append(CodexChatMessage(role: response.ok ? .assistant : .system, text: response.message.nonEmptyFallback(response.ok ? "Codex completed the turn without a final message." : "Codex could not complete the turn.")))
             codexConversations[name] = conversation

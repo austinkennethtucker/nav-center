@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Read-only distribution checks for one DMG, its sidecars, and the mounted app.
 # Signs nothing and submits nothing to Apple.
+# Requires NAV_CENTER_EXPECTED_TEAM_ID and NAV_CENTER_EXPECTED_SHA256 from a
+# trusted release/build record, never from the artifact or its adjacent sidecars.
 #
 # Usage: verify-release-artifact.sh <dmg> [--expect-version <v>] [--expect-build <n>]
 
@@ -73,6 +75,23 @@ case "$base" in
     ;;
 esac
 
+# Expected identity and bytes must come from outside the candidate artifact.
+expected_team="${NAV_CENTER_EXPECTED_TEAM_ID:-}"
+expected_digest="${NAV_CENTER_EXPECTED_SHA256:-}"
+if [[ ! "$expected_team" =~ ^[A-Z0-9]{10}$ || ! "$expected_digest" =~ ^[a-fA-F0-9]{64}$ ]]; then
+  report FAIL "trusted release inputs" "set a trusted 10-character Team ID and SHA-256 digest"
+  exit 1
+fi
+actual_digest="$(shasum -a 256 "$dmg" | awk 'NR==1 { print $1 }')"
+if [[ "$(printf '%s' "$actual_digest" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected_digest" | tr '[:upper:]' '[:lower:]')" ]]; then
+  report FAIL "trusted artifact digest" "candidate differs from the trusted build/release record"
+  exit 1
+fi
+report PASS "trusted artifact digest"
+# Require Apple's Developer ID Application certificate and the expected team.
+requirement="anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = \"$expected_team\""
+app_requirement="$requirement and identifier \"com.subdepthtech.navcenter\""
+
 sidecar="$dmg.sha256"
 if [[ ! -f "$sidecar" ]]; then
   report MISSING "checksum sidecar"
@@ -121,7 +140,7 @@ else
   report FAIL "hdiutil verify" "command failed"
 fi
 
-if codesign --verify --strict --verbose=2 "$dmg" >/dev/null 2>&1; then
+if codesign --verify --strict --verbose=2 -R "=$requirement" "$dmg" >/dev/null 2>&1; then
   report PASS "codesign --verify --strict"
 else
   report FAIL "codesign --verify --strict" "command failed"
@@ -170,8 +189,12 @@ fi
 mount_dir=""
 cleanup_mount() {
   if [[ -n "$mount_dir" ]]; then
-    hdiutil detach "$mount_dir" >/dev/null 2>&1 || true
-    rm -rf "$mount_dir"
+    if hdiutil detach "$mount_dir" >/dev/null 2>&1; then
+      rmdir "$mount_dir" 2>/dev/null || true
+    else
+      printf 'FAIL hdiutil detach: mount retained at %s\n' "$mount_dir" >&2
+      exit 1
+    fi
     mount_dir=""
   fi
 }
@@ -192,11 +215,13 @@ if [[ -z "$mount_dir" || ! -d "$mount_dir" ]]; then
   fi
 else
   trap cleanup_mount EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   app="$mount_dir/Nav Center.app"
   plist="$app/Contents/Info.plist"
   if hdiutil attach -readonly -nobrowse -mountpoint "$mount_dir" "$dmg" >/dev/null 2>&1; then
     report PASS "hdiutil attach"
-    if codesign --verify --deep --strict "$app" >/dev/null 2>&1; then
+    if codesign --verify --deep --strict -R "=$app_requirement" "$app" >/dev/null 2>&1; then
       report PASS "codesign --verify --deep --strict"
     else
       report FAIL "codesign --verify --deep --strict" "command failed"
@@ -275,4 +300,5 @@ fi
 if [[ "$failures" -gt 0 ]]; then
   exit 1
 fi
+printf 'Verified expected publisher and artifact bytes. Clean-machine and release acceptance remain separate.\n'
 exit 0

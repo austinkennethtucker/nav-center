@@ -319,8 +319,9 @@ struct CodexPanelView: View {
                     Task {
                         let outcome = await store.sendCodexMessage(message, allowEdits: editsAllowed, confirmed: editsConfirmed, packageName: packageName)
                         if outcome == .started {
-                            store.saveCodexDraft("", for: packageName)
-                            if draftPackageName == packageName && prompt == message { prompt = "" }
+                            // The store clears only the sent draft revision. A newer draft
+                            // may have the same text after package switches; retain it.
+                            if draftPackageName == packageName && prompt == message && store.codexDraft(for: packageName).isEmpty { prompt = "" }
                         }
                     }
                 } label: {
