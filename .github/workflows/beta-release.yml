@@ -114,10 +114,17 @@ jobs:
         env:
           NAV_CENTER_VERSION: ${{ inputs.version }}
           NAV_CENTER_BUILD: ${{ inputs.build }}
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
         run: |
           set -euo pipefail
           images=(dist/*.dmg)
           [[ ${#images[@]} -eq 1 && -f "${images[0]}" ]]
+          # Identity comes from protected release configuration; bytes were built
+          # in the preceding trusted job step, not downloaded with sidecars.
+          export NAV_CENTER_EXPECTED_TEAM_ID="${DEVELOPER_ID_APPLICATION##*(}"
+          NAV_CENTER_EXPECTED_TEAM_ID="${NAV_CENTER_EXPECTED_TEAM_ID%)}"
+          export NAV_CENTER_EXPECTED_SHA256
+          NAV_CENTER_EXPECTED_SHA256="$(shasum -a 256 "${images[0]}" | awk '{print $1}')"
           scripts/verify-release-artifact.sh "${images[0]}" --expect-version "$NAV_CENTER_VERSION" --expect-build "$NAV_CENTER_BUILD"
           (cd dist && shasum -a 256 -c ./*.dmg.sha256)
       - name: Upload validated beta artifacts

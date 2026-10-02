@@ -38,6 +38,60 @@ final class UXReadinessTests: XCTestCase {
     }
 
     @MainActor
+    func testCompletedCodexTurnPreservesNewerStoredDraft() async {
+        let service = UXTestService()
+        let store = DashboardStore(service: service)
+        await store.loadPackage(named: "A")
+        store.saveCodexDraft("M1", for: "A")
+        let started = expectation(description: "M1 started")
+        let release = DispatchSemaphore(value: 0)
+        service.chatStarted = started
+        service.chatRelease = release
+        let task = Task { await store.sendCodexMessage("M1", allowEdits: false, confirmed: false) }
+        await fulfillment(of: [started], timeout: 2)
+        store.saveCodexDraft("M2", for: "A")
+        await store.loadPackage(named: "B")
+        release.signal()
+        await task.value
+        XCTAssertEqual(store.codexDraft(for: "A"), "M2")
+        XCTAssertEqual(store.codexDraft(for: "B"), "")
+    }
+
+    @MainActor
+    func testCompletedCodexTurnPreservesNewerSameTextDraft() async {
+        let service = UXTestService()
+        let store = DashboardStore(service: service)
+        await store.loadPackage(named: "A")
+        store.saveCodexDraft("M1", for: "A")
+        let started = expectation(description: "M1 started")
+        let release = DispatchSemaphore(value: 0)
+        service.chatStarted = started
+        service.chatRelease = release
+        let task = Task { await store.sendCodexMessage("M1", allowEdits: false, confirmed: false) }
+        await fulfillment(of: [started], timeout: 2)
+        store.saveCodexDraft("M2", for: "A")
+        await store.loadPackage(named: "B")
+        await store.loadPackage(named: "A")
+        store.saveCodexDraft("M1", for: "A")
+        await store.loadPackage(named: "B")
+        await store.loadPackage(named: "A")
+        release.signal()
+        await task.value
+        XCTAssertEqual(store.codexDraft(for: "A"), "M1")
+        // The view must not clear local text when a stored draft was retained.
+        XCTAssertFalse(store.codexDraft(for: "A").isEmpty)
+    }
+
+    @MainActor
+    func testCompletedCodexTurnClearsOnlyUnchangedSentDraft() async {
+        let store = DashboardStore(service: UXTestService())
+        await store.loadPackage(named: "A")
+        store.saveCodexDraft("Sent", for: "A")
+        await store.sendCodexMessage("Sent", allowEdits: false, confirmed: false)
+        XCTAssertEqual(store.codexDraft(for: "A"), "")
+    }
+
+    @MainActor
     func testLateCodexReplyStaysWithOriginalPackageAndThread() async throws {
         let service = UXTestService()
         let store = DashboardStore(service: service)

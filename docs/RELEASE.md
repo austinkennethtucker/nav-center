@@ -80,7 +80,7 @@ Nothing in this runbook is automated or run by assistants without explicit autho
 
 1. Dispatch `beta-release.yml` on main with `version` and `build`, and approve the `release` environment.
 2. Download the exact workflow artifact.
-3. Run `scripts/verify-release-artifact.sh <dmg> --expect-version <v> --expect-build <n>` on the downloaded bytes.
+3. Set `NAV_CENTER_EXPECTED_TEAM_ID` from protected publisher configuration and `NAV_CENTER_EXPECTED_SHA256` from the trusted build run/release record (never the downloaded candidate or its adjacent sidecars). Run `scripts/verify-release-artifact.sh <dmg> --expect-version <v> --expect-build <n>` on the downloaded bytes.
 4. `git tag -s v<version> <source sha from BUILD.txt>`, then push the tag. The source SHA is the first line of `BUILD.txt`.
 5. `gh release create v<version> --prerelease --verify-tag` with the DMG, `.sha256`, `.notary.json` and `BUILD.txt`, and notes (support matrix, known limits, how to send `navcenterctl feedback-diagnostics` output).
 6. `scripts/update-homebrew-cask.sh <version> <release dmg url> <sha256> arm64 <tap>/Casks/nav-center.rb <dmg>.notary.json`.
