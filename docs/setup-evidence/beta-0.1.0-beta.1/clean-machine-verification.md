@@ -155,7 +155,6 @@ Jordan Sample designs reliable test workflows and documents recovery steps for i
 | 8.1 | Review only the WP12A rows assigned in the gate table. | WP12A | Not run | |
 | 8.2 | Fill tester and date in the Record table, and copy them into the evidence file. | WP12A | Not run | |
 | 8.3 | Copy the WP13 blocking sentence into the evidence file | WP12A | Not run | |
-
 | 8.1 (Homebrew) | Review only the WP12B rows assigned in the gate table. | WP12B | Not run | |
 | 8.2 (Homebrew) | Record WP12B tester and date separately. | WP12B | Not run | |
 | 8.3 (Homebrew) | Copy the WP13 blocking sentence into the evidence file. | WP12B | Not run | |
