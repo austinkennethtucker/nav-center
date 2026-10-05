@@ -80,7 +80,7 @@ Nothing in this runbook is automated or run by assistants without explicit autho
 
 1. Dispatch `beta-release.yml` on main with `version` and `build`, and approve the `release` environment.
 2. Download the exact workflow artifact.
-3. Run `scripts/verify-release-artifact.sh <dmg> --expect-version <v> --expect-build <n>` on the downloaded bytes. Record the result in `docs/setup-evidence/beta-<version>/artifact-verification.md`.
+3. Set `NAV_CENTER_EXPECTED_TEAM_ID` from protected publisher configuration and `NAV_CENTER_EXPECTED_SHA256` from the trusted build run/release record (never the downloaded candidate or its adjacent sidecars). Run `scripts/verify-release-artifact.sh <dmg> --expect-version <v> --expect-build <n>` on the downloaded bytes. Record the result in `docs/setup-evidence/beta-<version>/artifact-verification.md`.
 4. Record WP7 (`accessibility-checklist.md`) and WP8 Codex live acceptance (`integration-acceptance.md`) for the candidate. These gate sharing, not building: steps 1–3 may run first.
 5. WP12A: with explicit authorization, stage the verified files at a browser-download point so the download gets a quarantine attribute: a draft GitHub prerelease (`gh release create v<version> --draft --prerelease --target <source sha>` with the verified files; no tag is created while it is a draft, and draft assets are visible only to signed-in maintainers), or an equivalent staging location. Run WP12A of [BETA-VERIFICATION-CHECKLIST.md](BETA-VERIFICATION-CHECKLIST.md) on a clean supported Mac. Any data loss, Gatekeeper rejection or unrecoverable first-launch failure stops the release.
 6. `git tag -s v<version> <source sha from BUILD.txt>`, then push the tag. The source SHA is the first line of `BUILD.txt`.

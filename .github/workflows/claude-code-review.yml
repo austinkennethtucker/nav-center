@@ -29,11 +29,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # Required for Claude to read repository content.
-      pull-requests: read # Required for Claude to read pull request context.
-      issues: read # Required for Claude to read issue context.
-      id-token: write # Required to authenticate Claude Code.
+      pull-requests: write # Required to post the authorized review.
+      issues: write # Required to reply to authorized issue requests.
 
     steps:
+      - name: Authorize workflow caller
+        id: authorize
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CALLER: ${{ github.actor }}
+          ORIGINAL_CALLER: ${{ github.triggering_actor }}
+        run: |
+          set -euo pipefail
+          for actor in "$CALLER" "$ORIGINAL_CALLER"; do
+            permission="$(gh api "repos/$REPOSITORY/collaborators/$actor/permission" --jq '.permission')"
+            case "$permission" in
+              admin|maintain|write) ;;
+              *) echo "Caller is not authorized for credential-bearing Claude execution." >&2; exit 1 ;;
+            esac
+          done
+          echo 'trusted=true' >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,12 +59,16 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@4036a180cf690f49529f5d8c79c998855287f590 # v1
+        if: steps.authorize.outputs.trusted == 'true'
+        uses: anthropics/claude-code-action@fd1c128679612beff4ca259c78021c506e8aa7a7 # v1
         with:
+          github_token: ${{ github.token }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          prompt: >-
+            Review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+            for concrete security defects and regressions. Read the changed code and
+            relevant callers. Report only actionable findings with file and line
+            references using inline review comments. Do not modify repository files.
           claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
