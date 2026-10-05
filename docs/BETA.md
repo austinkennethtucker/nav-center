@@ -12,7 +12,9 @@ Download the DMG and its `.sha256` from the GitHub prerelease, then verify the d
 shasum -a 256 -c NavCenter-<version>-macos-arm64.dmg.sha256
 ```
 
-The public `subdepthtech/nav-center` Homebrew tap is an alternative install of that same prerelease:
+Until a prerelease's release notes say its Homebrew route is verified, install that prerelease from its DMG; the tap can still serve the previous beta.
+
+Only after those release notes confirm the candidate version, use the alternative Homebrew install:
 
 ```sh
 brew tap subdepthtech/nav-center
@@ -96,6 +98,8 @@ Use the `nav-center-beta-feedback` skill to turn the issue, expected behavior, a
 Feedback drafts should not include private resume content, exact private file paths, account data, tracker databases, or unapproved attachments.
 
 ## Known Beta Limits
+
+- Live voice interviews are not included in 0.1.0-beta.1. Realtime Interview currently creates a local session kit for an external client; it does not start audio or call a model.
 
 Accepted versions are observed per run. The evidence link below is the intended record; do not treat a tool as accepted until that run and its results are recorded.
 
