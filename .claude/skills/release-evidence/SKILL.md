@@ -18,29 +18,19 @@ Source-only CI and the offline dependency-stub tests establish none of them.
 bash .claude/skills/release-evidence/verify-artifact.sh /path/to/NavCenter-0.1.0-beta.1-macos-arm64.dmg
 ```
 
-The script is read-only. It signs nothing, submits nothing to Apple, and never
-mounts or modifies the image. It checks the artifact name contract first and
-stops immediately on an `-unsigned.dmg`, because no later result can redeem one.
+Set `NAV_CENTER_EXPECTED_TEAM_ID` and `NAV_CENTER_EXPECTED_SHA256` from
+independently trusted publisher configuration and the build/release record.
+Never derive them from the downloaded candidate or its adjacent sidecars.
+The skill delegates to `scripts/verify-release-artifact.sh`, which authenticates
+the expected Developer ID team and app bundle, checks the trusted digest,
+mounts read-only, verifies nested code and platform acceptance, then detaches.
+It signs nothing and submits nothing to Apple.
 
-Gates checked: name contract, sha256 and sidecar agreement, `hdiutil verify`,
-`codesign --verify --strict`, `Accepted` status in the retained
-`.dmg.notary.json`, `stapler validate`, and `spctl` assessment against the
-primary signature. Missing sidecars are reported as `MISSING` rather than
-silently passing.
-
-## Reporting
-
-The script ends by listing what it cannot establish — nested app and embedded CLI
-signature verification, app execute assessment, clean-machine install,
-offline launch with a valid staple, version and workflow confirmation, update and
-uninstall/zap scope, every advertised architecture, the minimum supported macOS,
-and the secret and private-data scans over tree and history. Reproduce that list
-when reporting; a passing script run establishes only the listed DMG checks.
-Nested-code verification and distribution readiness remain unestablished.
-
-Pair any result with the source revision and the packaging invocation that
-produced the artifact. A failed packaging command must not be treated as a
-release even when intermediate files remain on disk.
+A passing run establishes these artifact checks only. Clean-machine install,
+offline launch, core workflows, update/uninstall behavior, architecture and
+minimum-macOS acceptance, and source/private-data scans remain separate gates.
+Record the source revision, trusted build record, command, and exact artifact
+digest with the result.
 
 Human merge and release authority stays with the user: this skill produces
 evidence, never a decision to publish, distribute, or submit to Apple.

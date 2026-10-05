@@ -25,6 +25,12 @@ args = sys.argv[1:]
 event = name
 if name == "xcrun": event += ":" + ":".join(args[:2])
 if name == "spctl": event += ":" + args[args.index("-t") + 1]
+if name == "codesign" and "--verify" in args and "-R" in args:
+    requirement = args[args.index("-R") + 1]
+    if not requirement.startswith("="): sys.exit(8)
+    team = os.environ.get("FAKE_SIGNING_TEAM", "TESTTEAM01")
+    if f'certificate leaf[subject.OU] = "{team}"' not in requirement: sys.exit(8)
+    if "identifier" in requirement and os.environ.get("FAKE_BUNDLE_ID", "com.subdepthtech.navcenter") != "com.subdepthtech.navcenter": sys.exit(8)
 if name == "codesign": event += ":verify" if "--verify" in args else ":sign"
 if name == "gitleaks": event += ":" + args[0]
 if name == "git": event += ":status" if "status" in args else ":rev-parse"
@@ -54,6 +60,9 @@ if name == "hdiutil" and args[:1] == ["attach"] and "-mountpoint" in args:
             else:
                 shutil.copy2(child, destination)
 if name == "hdiutil" and args[:1] == ["detach"]:
+    for child in pathlib.Path(args[1]).iterdir():
+        if child.is_dir(): shutil.rmtree(child)
+        else: child.unlink()
     sys.exit(0)
 if name == "xcrun" and args[:2] == ["notarytool", "submit"]:
     key = pathlib.Path(args[args.index("--key") + 1])
@@ -197,6 +206,7 @@ class ReleaseScriptsTests(unittest.TestCase):
             "NAV_CENTER_DIST_DIR": str(self.dist),
             "NAV_CENTER_VERSION": "9.8.7-beta.2",
             "NAV_CENTER_BUILD": "42",
+            "NAV_CENTER_EXPECTED_TEAM_ID": "TESTTEAM01",
         }
 
     def run_script(self, name, *args, extra=None):
@@ -563,7 +573,9 @@ class ReleaseScriptsTests(unittest.TestCase):
 
     def run_verifier(self, image, *args, mount=None):
         self.trace.unlink(missing_ok=True)
-        extra = {"FAKE_MOUNT_SOURCE": str(mount)} if mount is not None else None
+        extra = {"NAV_CENTER_EXPECTED_SHA256": hashlib.sha256(image.read_bytes()).hexdigest()} if image.exists() else {}
+        if mount is not None:
+            extra["FAKE_MOUNT_SOURCE"] = str(mount)
         return self.run_script("verify-release-artifact.sh", str(image), *args, extra=extra)
 
     def test_verifier_passes_complete_artifact_and_checks_mounted_app(self):
@@ -596,6 +608,29 @@ class ReleaseScriptsTests(unittest.TestCase):
         self.assertEqual(execute[0]["args"][-1], app)
         self.assertTrue(any(event["tool"] == "hdiutil" and event["args"][:1] == ["detach"] for event in events))
         self.assertFalse(Path(mountpoint).exists())
+
+    def test_verifier_rejects_another_developer_even_when_platform_checks_pass(self):
+        self.env["FAKE_SIGNING_TEAM"] = "EVILTEAM01"
+        result = self.run_verifier(self.stage_artifact(), mount=self.stage_mount())
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+
+    def test_verifier_rejects_wrong_bundle_under_expected_team(self):
+        self.env["FAKE_BUNDLE_ID"] = "com.attacker.lookalike"
+        result = self.run_verifier(self.stage_artifact(), mount=self.stage_mount())
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+
+    def test_verifier_requires_independently_supplied_identity(self):
+        del self.env["NAV_CENTER_EXPECTED_TEAM_ID"]
+        result = self.run_verifier(self.stage_artifact(), mount=self.stage_mount())
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+
+    def test_verifier_rejects_substitution_with_matching_sidecars(self):
+        image = self.stage_artifact()
+        result = self.run_script("verify-release-artifact.sh", str(image), extra={
+            "FAKE_MOUNT_SOURCE": str(self.stage_mount()),
+            "NAV_CENTER_EXPECTED_SHA256": "0" * 64,
+        })
+        self.assertNotEqual(result.returncode, 0, result.stdout)
 
     def test_verifier_accepts_path_prefixed_sidecar_with_matching_basename(self):
         name = "NavCenter-0.1.0-beta-macos-arm64.dmg"
