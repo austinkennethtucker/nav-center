@@ -11,7 +11,7 @@ Any failure blocks WP13 rollout until fixed and re-verified through WP11–WP12.
 | Gate | Required coverage |
 | --- | --- |
 | WP12A (direct DMG; required before the first tester) | Sections 1–5; section 6 DMG-drag pass (6.1, 6.2, DMG half of 6.3, 6.4); 7.2; section 8. |
-| WP12B (Homebrew; required before advertising the tap or expanding beyond the first tester) | `brew install --cask nav-center` from the merged tap; brew half of 6.3 with its own 6.4; 7.1. |
+| WP12B (Homebrew; required before advertising the tap or expanding beyond the first tester) | `brew install --cask nav-center` from the merged tap; brew half of 6.3 with its own 6.4; 7.1; independent section 8 sign-off. |
 
 ## Record
 
@@ -152,12 +152,20 @@ Jordan Sample designs reliable test workflows and documents recovery steps for i
 
 | Step | Action | Gate | Pass/Fail | Observation |
 | --- | --- | --- | --- | --- |
-| 8.1 | Review sections 1–7. | WP12A | Not run | |
+| 8.1 | Review only the WP12A rows assigned in the gate table. | WP12A | Not run | |
 | 8.2 | Fill tester and date in the Record table, and copy them into the evidence file. | WP12A | Not run | |
 | 8.3 | Copy the WP13 blocking sentence into the evidence file | WP12A | Not run | |
 
+| 8.1 (Homebrew) | Review only the WP12B rows assigned in the gate table. | WP12B | Not run | |
+| 8.2 (Homebrew) | Record WP12B tester and date separately. | WP12B | Not run | |
+| 8.3 (Homebrew) | Copy the WP13 blocking sentence into the evidence file. | WP12B | Not run | |
+
 ## Sign-off
 
-Tester: Not recorded
+WP12A tester: Not recorded
 
-Date: Not recorded
+WP12A date: Not recorded
+
+WP12B tester: Not recorded
+
+WP12B date: Not recorded

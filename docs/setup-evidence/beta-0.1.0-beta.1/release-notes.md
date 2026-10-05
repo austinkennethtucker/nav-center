@@ -1,4 +1,4 @@
-<!-- Maintainer: publish only after artifact-verification.md, the WP7 and WP8 records, and WP12A pass; replace every {{PLACEHOLDER}}; delete this comment. -->
+<!-- Maintainer: publish only after artifact-verification.md, the WP7 and WP8 records, and WP12A pass; replace every {{PLACEHOLDER}}; after WP12B passes, replace the Homebrew warning with the verified version and install command before advertising the tap; delete this comment. -->
 # Nav Center 0.1.0-beta.1 (friends-and-family beta)
 
 Nav Center is a local-first macOS app for reviewing job-application packages, tracker status, and interview prep. Data stays on the tester's Mac. The only outbound traffic is the optional Codex panel and explicit posting-URL capture.

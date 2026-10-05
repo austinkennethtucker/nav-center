@@ -104,7 +104,7 @@ Download the DMG and its `.sha256` from the GitHub prerelease, then verify the d
 shasum -a 256 -c NavCenter-<version>-macos-arm64.dmg.sha256
 ```
 
-The public `subdepthtech/nav-center` Homebrew tap is an alternative install of that same prerelease:
+Install each prerelease from its DMG until its release notes announce a verified Homebrew route after WP12B. The `subdepthtech/nav-center` tap may still serve the previous beta. Once the release notes confirm the candidate version, the alternative install is:
 
 ```sh
 brew tap subdepthtech/nav-center

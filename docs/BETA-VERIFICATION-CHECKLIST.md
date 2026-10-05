@@ -13,7 +13,7 @@ The split removes a circular dependency in the plan and waives neither gate.
 | Gate | Required coverage |
 | --- | --- |
 | WP12A (direct DMG; required before the first tester) | Sections 1–5; section 6 DMG-drag pass (6.1, 6.2, DMG half of 6.3, 6.4); 7.2; section 8. |
-| WP12B (Homebrew; required before advertising the tap or expanding beyond the first tester) | `brew install --cask nav-center` from the merged tap; brew half of 6.3 with its own 6.4; 7.1. |
+| WP12B (Homebrew; required before advertising the tap or expanding beyond the first tester) | `brew install --cask nav-center` from the merged tap; brew half of 6.3 with its own 6.4; 7.1; independent section 8 sign-off. |
 
 ## Record
 
@@ -134,6 +134,6 @@ The manual DMG uninstall in 7.2 belongs to WP12A. The Homebrew zap in 7.1 belong
 
 | Step | Action | Expected | Pass/Fail |
 | --- | --- | --- | --- |
-| 8.1 | Review sections 1–7. | Every step is Pass, or each failure ID is listed with a link to an issue. | |
-| 8.2 | Fill tester and date in the Record table, and copy them into the evidence file. | The evidence file names the tester and the date. | |
+| 8.1 | Review only the rows assigned to the gate being signed off (WP12A or WP12B) in the gate table above; record the gate name separately. | Every required row for that gate is Pass; failures have issue links and block that gate. WP12A sign-off does not require WP12B rows. | |
+| 8.2 | Fill tester and date in the Record table, and copy them into the evidence file. | The evidence file names the gate, tester and date separately for WP12A and WP12B. | |
 | 8.3 | Copy this sentence into the evidence file: `Any failure blocks WP13 rollout until fixed and re-verified through WP11–WP12.` | The evidence file contains that sentence. | |

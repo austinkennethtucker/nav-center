@@ -62,7 +62,7 @@ Status: in progress (2026-09-23). Not accepted until every row below is Pass.
 | 4 | One chat proposing edits requires confirmation, then applies only to package Markdown. | Human | Not run | Not run | |
 | 5 | The staging directory has mode 0700. | Automated observation (sampler) | Not run | Not run | |
 | 6 | The server is stopped before changes are applied. | Automated observation (sampler) | Not run | Not run | |
-| 7 | Compare `ls -la ~/.codex` before and after; Nav Center does not modify it. | Automated (metadata listing only; contents never read) | Not run | Not run | |
+| 7 | Use a disposable account and an explicitly synthetic Codex home to verify Nav Center does not modify Codex state; never inspect the maintainer’s real authentication/session directory. | Isolated synthetic observation | Not run | Not run | |
 | 8 | No private data is used. | Attestation | Not run | Not run | |
 
-Method notes: the sampler polls every 0.1 s and records the mode of `$(getconf DARWIN_USER_TEMP_DIR)nav-center-codex-*`, whether the app's `codex app-server` child process is alive, and the modification times of the synthetic package's Markdown files; ordering is judged from those timestamps. The `~/.codex` comparison lists names, sizes and modification times only; the Codex CLI itself writes its own session, history and log files there during a chat, so the check is that no entry is created or changed that the Codex process does not own.
+Method notes: the sampler polls every 0.1 s and records the mode of `$(getconf DARWIN_USER_TEMP_DIR)nav-center-codex-*`, whether the app's `codex app-server` child process is alive, and the modification times of the synthetic package's Markdown files; ordering is judged from those timestamps. For row 7, use a disposable account with an explicitly synthetic Codex home. If that surface is unavailable, record row 7 as blocked; do not list or inspect the maintainer’s real Codex directory.
