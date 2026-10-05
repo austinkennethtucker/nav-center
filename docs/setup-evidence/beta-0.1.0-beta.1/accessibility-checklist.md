@@ -53,7 +53,7 @@ Human rows are observed by the maintainer (VoiceOver on where the row says Voice
 
 ## Sign-off
 
-Accepted only when every row is Pass (or each failure has an issue link and an explicit owner decision) and every critical row is Pass on the signed candidate.
+Accepted only when every row is Pass and every critical row is Pass on the signed candidate. Any failed row blocks WP7 acceptance and the first tester until fixed and re-verified; retain issue links as failure evidence.
 
 Tester: Not recorded
 

@@ -12,14 +12,14 @@ Download the DMG and its `.sha256` from the GitHub prerelease, then verify the d
 shasum -a 256 -c NavCenter-<version>-macos-arm64.dmg.sha256
 ```
 
-The public `subdepthtech/nav-center` Homebrew tap is an alternative install of that same prerelease:
+Until a prerelease's release notes say its Homebrew route is verified, install that prerelease from its DMG; the tap can still serve the previous beta.
+
+Only after those release notes confirm the candidate version, use the alternative Homebrew install:
 
 ```sh
 brew tap subdepthtech/nav-center
 brew install --cask nav-center
 ```
-
-Until a prerelease's release notes say its Homebrew route is verified, install that prerelease from its DMG; the tap can still serve the previous beta.
 
 1. Open the beta DMG.
 2. Drag `Nav Center.app` to `/Applications`.
