@@ -128,7 +128,7 @@ jobs:
           scripts/verify-release-artifact.sh "${images[0]}" --expect-version "$NAV_CENTER_VERSION" --expect-build "$NAV_CENTER_BUILD"
           (cd dist && shasum -a 256 -c ./*.dmg.sha256)
       - name: Upload validated beta artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nav-center-beta-${{ inputs.version }}-${{ inputs.build }}
           if-no-files-found: error
@@ -142,7 +142,7 @@ jobs:
             dist/dependencies.spdx.metadata.json
             dist/DEPENDENCIES.md
       - name: Upload secret scan reports
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nav-center-beta-${{ inputs.version }}-${{ inputs.build }}-secret-scan-reports
           if-no-files-found: error
